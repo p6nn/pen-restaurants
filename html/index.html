@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Restaurant Management</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="managementContainer" class="management-container" style="display:none;">
+    <div class="management-panel">
+      <div class="header">
+        <div class="header-left">
+          <h1 id="restaurantTitle" class="restaurant-title">Restaurant Management</h1>
+          <p class="subtitle">Restaurant Management System</p>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div id="totalRevenue" class="stat-value">$0</div>
+            <div class="stat-label">Revenue</div>
+          </div>
+          <div class="stat-item">
+            <div id="onlineStaff" class="stat-value">0</div>
+            <div class="stat-label">Staff Online</div>
+          </div>
+          <button id="closeBtn" class="close-btn" title="Close">×</button>
+        </div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="shop" onclick="switchTab('shop')">INGREDIENT SHOP</button>
+        <button class="nav-tab" data-tab="menu" onclick="switchTab('menu')">CUSTOMER MENU</button>
+        <button class="nav-tab" data-tab="recipes" onclick="switchTab('recipes')">RECIPE MANAGER</button>
+        <button class="nav-tab" data-tab="staff" onclick="switchTab('staff')">STAFF MANAGEMENT</button>
+      </div>
+
+      <div class="tab-content">
+        <div id="shop-tab" class="tab-panel active">
+          <div id="shopGrid" class="shop-grid"></div>
+        </div>
+
+        <div id="menu-tab" class="tab-panel">
+          <div class="menu-display">
+            <h2 class="panel-title">Customer Menu</h2>
+            <div id="customerMenu"></div>
+          </div>
+        </div>
+
+        <div id="recipes-tab" class="tab-panel">
+          <div class="register-section">
+            <h2 class="panel-title">Recipe Manager</h2>
+            <div class="toolbar">
+              <button id="createRecipeBtn" class="btn btn-primary">Create New Recipe</button>
+              <button id="refreshRecipesBtn" class="btn btn-secondary">Refresh Recipes</button>
+            </div>
+
+            <div id="createRecipeForm" class="card form-card" style="display:none;">
+              <div class="card-header">
+                <h3 id="recipeFormTitle" class="card-title">Create New Recipe</h3>
+                <p class="card-subtitle">Define the name, type, ingredients and cook time.</p>
+              </div>
+              <div class="card-body">
+                <div class="register-form">
+                  <div class="form-group">
+                    <label class="form-label" for="recipeName">Recipe Name</label>
+                    <input type="text" id="recipeName" class="form-input" placeholder="e.g., House Special Ramen"/>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label" for="recipeType">Recipe Type</label>
+                      <select id="recipeType" class="form-select">
+                        <option value="food">Food</option>
+                        <option value="drinks">Drinks</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="cookTime">Cook Time (seconds)</label>
+                      <input type="number" id="cookTime" class="form-input" value="10" min="1"/>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="recipeDescription">Description</label>
+                    <input type="text" id="recipeDescription" class="form-input" placeholder="Short description shown to customers"/>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="ingredientSelect">Ingredients</label>
+                    <div id="ingredientsList" class="tags"></div>
+                    <div class="form-row">
+                      <select id="ingredientSelect" class="form-select">
+                        <option value="">Select ingredient...</option>
+                      </select>
+                      <button type="button" class="btn btn-secondary" id="addIngredientBtn">Add</button>
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button type="button" class="btn btn-primary" id="saveRecipeBtn">Save Recipe</button>
+                    <button type="button" class="btn btn-secondary" id="cancelRecipeBtn">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="existing-recipes">
+              <h3 class="panel-subtitle">Existing Recipes</h3>
+              <div id="recipesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="staff-tab" class="tab-panel">
+        <div class="staff-section">
+          <div class="staff-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span>Staff Management</span>
+            <div class="staff-toolbar" style="display:flex;gap:8px;align-items:center;">
+              <input id="staffSearch" type="text" class="form-input" placeholder="Search by name / ID" style="width:220px;">
+              <select id="staffFilterDuty" class="form-select" style="width:140px;">
+                <option value="all">All</option>
+                <option value="on">On Duty</option>
+                <option value="off">Off Duty</option>
+              </select>
+              <select id="staffFilterGrade" class="form-select" style="width:160px;">
+                <option value="all">All Grades</option>
+                <option value="0">Grade 0</option>
+                <option value="1">Grade 1</option>
+                <option value="2">Grade 2</option>
+                <option value="3">Grade 3</option>
+                <option value="4">Grade 4</option>
+              </select>
+              <button id="refreshStaffBtn" class="btn btn-secondary">Refresh</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <div class="card-body" style="padding:0;">
+              <div class="staff-table">
+                <div class="staff-row staff-row--head">
+                  <div>Employee</div>
+                  <div>Grade</div>
+                  <div>Status</div>
+                  <div>Role</div>
+                  <div style="text-align:right;">Actions</div>
+                </div>
+                <div id="staffList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="staff-section">
+          <div class="staff-header">Clock-in Information</div>
+          <div id="clockinInfo">
+            <p class="muted">Staff clock-in/out times and shifts will be displayed here</p>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="basketFab" class="basket-fab" style="display:none;">
+    <button id="basketToggle" class="basket-btn">🧺 <span id="basketCount">0</span></button>
+  </div>
+
+  <div id="basketPanel" class="basket-panel" style="display:none;">
+    <div class="basket-header">
+      <span>Basket</span>
+      <button id="basketClose" class="basket-close">×</button>
+    </div>
+    <div id="basketItems" class="basket-items"></div>
+    <div class="basket-footer">
+      <div class="basket-total">Total: <span id="basketTotal">$0</span></div>
+      <div class="basket-actions">
+        <button id="basketClear" class="btn btn-secondary">Clear</button>
+        <button id="basketCheckout" class="btn btn-primary">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
