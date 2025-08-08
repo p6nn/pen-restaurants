@@ -1,3 +1,7 @@
+# UI Preview
+
+https://streamable.com/j59ymu
+
 # TO - DO
 
 Fix shop not working
