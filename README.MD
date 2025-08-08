@@ -1,3 +1,7 @@
+# TO - DO
+
+Fix shop not working
+
 # FiveM Restaurant System (WIP)
 
 A fully customisable, **roleplay-focused restaurant system** for FiveM, built for **Qbox** with **ox_lib**, **ox_inventory**, and a modern **Mantine React UI**.  
