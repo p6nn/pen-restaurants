@@ -175,6 +175,43 @@ RegisterNetEvent('QBCore:Client:SetDuty', function(_onDuty)
     if lastRestaurant then requestStaff(lastRestaurant) end
 end)
 
+
+---@param restaurant string
+---@param stationType string
+function showCookingMenu(restaurant, stationType)
+    lib.callback('pen-restaurant:cooking:getRecipes', false, function(recipes)
+        if not recipes or #recipes == 0 then
+            exports.qbx_core:Notify('No recipes available for ' .. stationType, 'error')
+            return
+        end
+        local menuOptions = {}
+        for i, recipe in ipairs(recipes) do
+            local ingredients = {}
+            if recipe.ingredients then
+                local ok, decoded = pcall(json.decode, recipe.ingredients)
+                if ok then ingredients = decoded end
+            end
+            local ingredientsList = table.concat(ingredients, ", "):gsub("_", " ")
+            menuOptions[#menuOptions+1] = {
+                title=recipe.name,
+                description=(recipe.description or "Custom recipe") .. "\nIngredients: " .. ingredientsList,
+                icon= stationType == "drinks" and "coffee" or "utensils",
+                onSelect=function()
+                    startCooking(restaurant, stationType, i, {
+                        name=recipe.name, ingredients=ingredients, cookTime=recipe.cook_time or 10000, description=recipe.description
+                    })
+                end
+            }
+        end
+        lib.registerContext({
+            id='cooking_menu_'..restaurant..'_'..stationType,
+            title=Config.restaurant[restaurant].label .. ' - ' .. stationType:gsub("^%l", string.upper) .. ' Menu',
+            options=menuOptions
+        })
+        lib.showContext('cooking_menu_'..restaurant..'_'..stationType)
+    end, restaurant, stationType)
+end
+
 ---@param restaurant string
 ---@param stationType string
 ---@param recipeIndex number
@@ -208,42 +245,6 @@ function startCooking(restaurant, stationType, recipeIndex, recipe)
             exports.qbx_core:Notify('Missing ingredients: ' .. ingredientsList, 'error')
         end
     end, recipe.ingredients)
-end
-
----@param restaurant string
----@param stationType string
-local function showCookingMenu(restaurant, stationType)
-    lib.callback('pen-restaurant:cooking:getRecipes', false, function(recipes)
-        if not recipes or #recipes == 0 then
-            exports.qbx_core:Notify('No recipes available for ' .. stationType, 'error')
-            return
-        end
-        local menuOptions = {}
-        for i, recipe in ipairs(recipes) do
-            local ingredients = {}
-            if recipe.ingredients then
-                local ok, decoded = pcall(json.decode, recipe.ingredients)
-                if ok then ingredients = decoded end
-            end
-            local ingredientsList = table.concat(ingredients, ", "):gsub("_", " ")
-            menuOptions[#menuOptions+1] = {
-                title=recipe.name,
-                description=(recipe.description or "Custom recipe") .. "\nIngredients: " .. ingredientsList,
-                icon= stationType == "drinks" and "coffee" or "utensils",
-                onSelect=function()
-                    startCooking(restaurant, stationType, i, {
-                        name=recipe.name, ingredients=ingredients, cookTime=recipe.cook_time or 10000, description=recipe.description
-                    })
-                end
-            }
-        end
-        lib.registerContext({
-            id='cooking_menu_'..restaurant..'_'..stationType,
-            title=Config.restaurant[restaurant].label .. ' - ' .. stationType:gsub("^%l", string.upper) .. ' Menu',
-            options=menuOptions
-        })
-        lib.showContext('cooking_menu_'..restaurant..'_'..stationType)
-    end, restaurant, stationType)
 end
 
 exports('openCookingUI', openManagementUI)
