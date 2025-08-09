@@ -1,6 +1,7 @@
 # UI Preview
 
 https://streamable.com/j59ymu
+<img width="650" height="590" alt="Screenshot 2025-08-06 192215" src="https://i.ibb.co/MxYVkT67/Screenshot-2025-08-08-202857.png" />
 
 # TO - DO
 
