@@ -86,6 +86,81 @@ local function CountPlayersOnDuty(restaurant)
     return count
 end
 
+---@param n any
+---@param fallback any
+---@return any
+local function safeNumber(n, fallback)
+    n = tonumber(n)
+    if not n or n < 0 then return fallback or 0 end
+    return n
+end
+
+---@param restaurant any
+---@return string
+local function getCompanyAccountName(restaurant)
+    local r = Config.restaurant and Config.restaurant[restaurant]
+    return r and r.companyAccount or nil
+end
+
+---@param key any
+---@return string
+---@return any
+local function getItemFromConfigKey(key)
+    local entry = Config.shopPrices[key]
+    if type(entry) == "table" then
+        return entry.item or key, safeNumber(entry.price, 0)
+    end
+    return key, safeNumber(entry, 0)
+end
+
+---@param src any
+---@param item any
+---@param qty any
+---@return boolean
+local function giveItem(src, item, qty)
+    qty = safeNumber(qty, 1)
+    if exports.ox_inventory then
+        exports.ox_inventory:AddItem(src, item, qty)
+        return true
+    end
+    print(("[pen-restaurant] Give %sx %s to %s (no ox_inventory export found)"):format(qty, item, src))
+    return true
+end
+
+---@param src any
+---@param total any
+---@return boolean
+local function chargePersonal(src, total)
+    total = safeNumber(total, 0)
+    if total <= 0 then return true end
+
+    if exports.qbx_core then
+        local success = exports.qbx_core:RemoveMoney(src, 'bank', total, 'restaurant-ingredient-purchase')
+        return success ~= false
+    end
+
+    print(("[pen-restaurant] Charge personal %s skipped (no qbx_core)."):format(total))
+    return true
+end
+
+---@param restaurant any
+---@param total any
+---@return boolean
+local function chargeCompany(restaurant, total)
+    total = safeNumber(total, 0)
+    if total <= 0 then return true end
+
+    local account = getCompanyAccountName(restaurant)
+    if not account then
+        print(("[pen-restaurant] No company account for %s; cannot charge company."):format(tostring(restaurant)))
+        return false
+    end
+
+    -- TODO: banking shit
+    print(("[pen-restaurant] (FAKE) Charged company account %s for %s"):format(account, total))
+    return true
+end
+
 ---@param src number
 AddEventHandler('QBCore:Server:OnPlayerUnload', function(src)
     local ply = exports.qbx_core:GetPlayer(src)
@@ -156,6 +231,56 @@ RegisterNetEvent("pen-restaurant:server:clockIn", function(restaurant)
     end
     TriggerClientEvent('pen-restaurant:staff:client:updated', -1, restaurant)
 end)
+
+---@param data any
+RegisterNetEvent('pen-restaurant:shop:server:checkoutBasket', function(data)
+    local src = source
+    local restaurant = data and data.restaurant
+    local items = (data and data.items) or {}
+    local payment = (data and data.payment) or 'company'
+
+    if type(items) ~= 'table' or #items == 0 then
+        TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Basket is empty.' })
+        TriggerClientEvent('pen-restaurant:nui:message', src, { type='basketResult', ok=false, error='empty' })
+        return
+    end
+
+    local total = 0
+    local normalized = {}
+
+    for _, it in ipairs(items) do
+        local key = it.itemName
+        local qty = safeNumber(it.qty, 1)
+        local itemDbName, unitPrice = getItemFromConfigKey(key)
+        if unitPrice <= 0 then
+            TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = ('Invalid price for %s'):format(key) })
+            TriggerClientEvent('pen-restaurant:nui:message', src, { type='basketResult', ok=false, error='invalid_price' })
+            return
+        end
+        total = total + unitPrice * qty
+        normalized[#normalized+1] = { item = itemDbName, key = key, qty = qty, unit = unitPrice }
+    end
+
+    local ok = false
+    if payment == 'personal' then
+        ok = chargePersonal(src, total)
+    else
+        ok = chargeCompany(restaurant, total)
+    end
+    if not ok then
+        TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Payment failed.' })
+        TriggerClientEvent('pen-restaurant:nui:message', src, { type='basketResult', ok=false, error='payment_failed' })
+        return
+    end
+
+    for _, row in ipairs(normalized) do
+        giveItem(src, row.item, row.qty)
+    end
+
+    TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Purchased %d items ($%s)'):format(#normalized, total) })
+    TriggerClientEvent('pen-restaurant:nui:message', src, { type='basketResult', ok=true })
+end)
+
 
 ---@param source number
 ---@param restaurant string
