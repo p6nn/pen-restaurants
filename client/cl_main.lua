@@ -183,7 +183,8 @@ local function showCustomerMenu(restaurant)
             menuOptions[#menuOptions+1] = {
                 title = typeIcon .. menuItem.name,
                 description = (menuItem.description or "Delicious " .. menuItem.name:lower()) .. " - $" .. (menuItem.price or 15),
-                icon = 'utensils'
+                icon = 'utensils',
+                onSelect = function()  end
             }
         end
         lib.registerContext({
@@ -195,6 +196,9 @@ local function showCustomerMenu(restaurant)
     end, restaurant)
 end
 
+---@param entering boolean
+---@param callChannel number
+---@param restaurant string
 RegisterNetEvent("pen-restaurant:driveThru:client:applyCallChannel", function(entering, callChannel, restaurant)
     applyDriveThruCall(entering, callChannel, restaurant)
 end)
@@ -278,7 +282,7 @@ CreateThread(function()
                         options={{ name="cook_"..zoneId, label="Cook "..stationType:gsub("^%l", string.upper),
                             icon= stationType == "drinks" and "fa-solid fa-coffee" or "fa-solid fa-utensils",
                             canInteract=function() return isClockedIn(restaurantName) end,
-                            onSelect=function() showCustomerMenu(restaurantName) end}}
+                            onSelect=function() showCookingMenu(restaurantName, stationType) end}}
                     })
                 end
             end
