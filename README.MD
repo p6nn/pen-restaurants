@@ -4,7 +4,8 @@ https://streamable.com/j59ymu
 
 # TO - DO
 
-Fix shop not working
+fix revenue and online staff count
+fix issue where duty status doesn’t reset correctly, especially when a player is clocking off for the first time or when changing duty status after the resource starts.
 
 # FiveM Restaurant System (WIP)
 
